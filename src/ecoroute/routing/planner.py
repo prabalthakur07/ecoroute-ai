@@ -19,7 +19,9 @@ BREATHING_FACTOR = 1.0  # placeholder: scale by activity (cycling/riding ~2-3x r
 
 
 def edge_time_s(e: dict, hour: float) -> float:
-    speed = SPEED_KMH[e["road_class"]] * (1 - CONGESTION_LOSS[e["road_class"]] * rush_intensity(hour))
+    speed = SPEED_KMH[e["road_class"]] * (
+        1 - CONGESTION_LOSS[e["road_class"]] * rush_intensity(hour)
+    )
     return e["length_m"] / (speed / 3.6)
 
 
@@ -45,7 +47,9 @@ class Planner:
         key = id(pm)
         if key not in self._e0_cache:
             self._e0_cache[key] = float(
-                np.mean([edge_exposure(e, pm, u, v, self.hour) for u, v, e in self.G.edges(data=True)])
+                np.mean(
+                    [edge_exposure(e, pm, u, v, self.hour) for u, v, e in self.G.edges(data=True)]
+                )
             )
         return self._e0_cache[key]
 

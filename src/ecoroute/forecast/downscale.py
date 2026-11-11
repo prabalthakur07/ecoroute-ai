@@ -72,9 +72,13 @@ def leave_one_station_out(df: pd.DataFrame, test_days_from: int, seed: int = 0) 
         for (day, hour), idx in held.groupby(["day", "hour"]).groups.items():
             obs = df[(df["station"] != s) & (df["day"] == day) & (df["hour"] == hour)]
             pred_idw[held.index.get_indexer(idx)] = idw_predict(
-                obs[["x", "y"]].to_numpy(), obs["pm25"].to_numpy(), held.loc[idx, ["x", "y"]].to_numpy()
+                obs[["x", "y"]].to_numpy(),
+                obs["pm25"].to_numpy(),
+                held.loc[idx, ["x", "y"]].to_numpy(),
             )
         y = held["pm25"].to_numpy()
         for name, p in [("gbm", pred_gbm), ("idw", pred_idw), ("regional_mean", pred_reg)]:
-            rows.append({"station": s, "model": name, "rmse": float(np.sqrt(np.mean((y - p) ** 2)))})
+            rows.append(
+                {"station": s, "model": name, "rmse": float(np.sqrt(np.mean((y - p) ** 2)))}
+            )
     return pd.DataFrame(rows)

@@ -31,7 +31,7 @@ def build_city(n: int = 20, spacing_m: float = 250.0) -> nx.Graph:
     G = nx.convert_node_labels_to_integers(G, label_attribute="ij")
     extent = (n - 1) * spacing_m
     art_coords = np.arange(0, n, ARTERIAL_EVERY) * spacing_m
-    for node, d in G.nodes(data=True):
+    for _node, d in G.nodes(data=True):
         i, j = d["ij"]
         x, y = i * spacing_m, j * spacing_m
         d["x"], d["y"] = x, y

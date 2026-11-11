@@ -46,8 +46,14 @@ def sample_trips(G, n: int, rng: np.random.Generator, min_hops: int = 10):
     return trips
 
 
-def run(seed: int = 0, trips: int = 300, hour: int = 18, lam: float = 0.5,
-        n_stations: int = 25, grid: int = 20) -> Experiment:
+def run(
+    seed: int = 0,
+    trips: int = 300,
+    hour: int = 18,
+    lam: float = 0.5,
+    n_stations: int = 25,
+    grid: int = 20,
+) -> Experiment:
     rng = np.random.default_rng(seed)
     G = build_city(n=grid)
     stations = pick_stations(G, n_stations, rng)
@@ -65,22 +71,27 @@ def run(seed: int = 0, trips: int = 300, hour: int = 18, lam: float = 0.5,
     od = sample_trips(G, trips, rng)
     fastest = {t: planner.evaluate(planner.plan(*t, 0.0, pm_pred), pm_true) for t in od}
 
-    def compare(l: float, pm_plan) -> dict:
+    def compare(lam_val: float, pm_plan) -> dict:
         dt, dx, changed = [], [], 0
         for t in od:
-            r = planner.evaluate(planner.plan(*t, l, pm_plan), pm_true)
+            r = planner.evaluate(planner.plan(*t, lam_val, pm_plan), pm_true)
             f = fastest[t]
             dt.append(100 * (r.time_min - f.time_min) / f.time_min)
             dx.append(100 * (r.exposure - f.exposure) / f.exposure)
             changed += r.path != f.path
-        return {"extra_time_%": np.mean(dt), "exposure_change_%": np.mean(dx),
-                "routes_changed_%": 100 * changed / len(od)}
+        return {
+            "extra_time_%": np.mean(dt),
+            "exposure_change_%": np.mean(dx),
+            "routes_changed_%": 100 * changed / len(od),
+        }
 
     lams = [0.0, 0.1, 0.25, 0.5, 0.75, 1.0]
-    sweep = pd.DataFrame([{"lam": l, **compare(l, pm_pred)} for l in lams])
+    sweep = pd.DataFrame([{"lam": v, **compare(v, pm_pred)} for v in lams])
     summary = pd.DataFrame(
-        [{"planner": "eco (predicted PM2.5)", **compare(lam, pm_pred)},
-         {"planner": "eco (oracle PM2.5)", **compare(lam, pm_true)}]
+        [
+            {"planner": "eco (predicted PM2.5)", **compare(lam, pm_pred)},
+            {"planner": "eco (oracle PM2.5)", **compare(lam, pm_true)},
+        ]
     )
     t0 = od[0]
     example = {
